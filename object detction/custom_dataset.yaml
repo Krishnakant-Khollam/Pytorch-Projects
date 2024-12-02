@@ -1,0 +1,6 @@
+train: /home/mushroom/Desktop/projects/train
+val: /home/mushroom/Desktop/projects/val
+
+nc: 2
+
+names: ["HELMET","MASK"]
