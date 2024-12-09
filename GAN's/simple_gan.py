@@ -22,7 +22,7 @@ transform = transforms.Compose(
     ]
 )
 
-dataset = datasets.MNIST(root="./data", train=True, transform=transform, download=False)
+dataset = datasets.MNIST(root="./data", train=True, transform=transform, download=True)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
