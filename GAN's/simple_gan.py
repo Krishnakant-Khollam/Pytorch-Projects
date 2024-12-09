@@ -4,12 +4,15 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
+# Check if GPU is available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Hyperparameters
 latent_dim = 100  # Size of noise vector
 image_size = 28 * 28  # MNIST images are 28x28
 batch_size = 64
 learning_rate = 0.0002
-epochs = 50
+epochs = 5
 
 # Data preparation
 transform = transforms.Compose(
@@ -19,7 +22,7 @@ transform = transforms.Compose(
     ]
 )
 
-dataset = datasets.MNIST(root="./data", train=True, transform=transform, download=True)
+dataset = datasets.MNIST(root="./data", train=True, transform=transform, download=False)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
@@ -62,8 +65,8 @@ class Discriminator(nn.Module):
 
 
 # Initialize models
-generator = Generator(latent_dim, image_size)
-discriminator = Discriminator(image_size)
+generator = Generator(latent_dim, image_size).to(device)
+discriminator = Discriminator(image_size).to(device)
 
 # Loss and optimizers
 criterion = nn.BCELoss()  # Binary cross-entropy loss
@@ -75,15 +78,15 @@ for epoch in range(epochs):
     for real_images, _ in dataloader:
         batch_size = real_images.size(0)
 
-        # Flatten real images
-        real_images = real_images.view(batch_size, -1)
+        # Flatten real images and move to device
+        real_images = real_images.view(batch_size, -1).to(device)
 
         # Labels for real and fake data
-        real_labels = torch.ones(batch_size, 1)
-        fake_labels = torch.zeros(batch_size, 1)
+        real_labels = torch.ones(batch_size, 1).to(device)
+        fake_labels = torch.zeros(batch_size, 1).to(device)
 
         # Train Discriminator
-        z = torch.randn(batch_size, latent_dim)  # Random noise
+        z = torch.randn(batch_size, latent_dim).to(device)  # Random noise
         fake_images = generator(z)  # Generate fake images
 
         real_output = discriminator(real_images)  # Discriminator on real images
@@ -114,8 +117,10 @@ for epoch in range(epochs):
 # Generate and visualize samples
 import matplotlib.pyplot as plt
 
-z = torch.randn(16, latent_dim)  # Generate 16 samples
-fake_images = generator(z).view(-1, 1, 28, 28).detach()  # Reshape for visualization
+z = torch.randn(16, latent_dim).to(device)  # Generate 16 samples
+fake_images = (
+    generator(z).view(-1, 1, 28, 28).cpu().detach()
+)  # Reshape and move to CPU for visualization
 
 # Plot
 fig, axes = plt.subplots(4, 4, figsize=(6, 6))
